@@ -23,7 +23,7 @@ namespace Car_Rental_System
                         Register();
                         break;
                     case "2":
-                        Console.WriteLine("Login feature coming soon...");
+                        Login();
                         break;
                     case "3":
                         return;
@@ -46,6 +46,30 @@ namespace Car_Rental_System
             string role = Console.ReadLine();
 
             dbHelper.RegisterUser(name, email, password, role);
+        }
+
+        static void Login()
+        {
+            Console.Write("Enter Email: ");
+            string email = Console.ReadLine();
+            Console.Write("Enter Password: ");
+            string password = Console.ReadLine();
+
+            User user = dbHelper.LoginUser(email, password);
+
+            if (user != null)
+            {
+                Console.WriteLine($"\nWelcome, {user.Name}! You are logged in as {user.Role}.");
+
+                if (user.Role == "Admin")
+                    AdminMenu();
+                else
+                    CustomerMenu();
+            }
+            else
+            {
+                Console.WriteLine("Invalid email or password. Please try again.");
+            }
         }
     }
 }
