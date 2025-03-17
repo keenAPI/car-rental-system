@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using Microsoft.Data.SqlClient;
+using Car_Rental_System.Models;
 
 namespace Car_Rental_System
 {

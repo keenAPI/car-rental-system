@@ -12,6 +12,6 @@ namespace Car_Rental_System.Models
         public string Name { get; set; }
         public string Email { get; set; }
         public string Password { get; set; }
-        string Role { get; set; } //Admin or Customer
+        public string Role { get; set; } //Admin or Customer
     }
 }

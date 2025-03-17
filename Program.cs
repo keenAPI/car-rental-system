@@ -1,4 +1,5 @@
 ﻿using System.Threading.Channels;
+using Car_Rental_System.Models;
 
 namespace Car_Rental_System
 {
@@ -70,6 +71,71 @@ namespace Car_Rental_System
             {
                 Console.WriteLine("Invalid email or password. Please try again.");
             }
+        }
+
+        static void AdminMenu()
+        {
+            while (true)
+            {
+                Console.WriteLine("\n--- Admin Menu ---");
+                Console.WriteLine("1. Manage Cars");
+                Console.WriteLine("2. View Rentals");
+                Console.WriteLine("3. Logout");
+                Console.WriteLine("Choose an option: ");
+
+                string choice = Console.ReadLine();
+
+                switch (choice)
+                {
+                    case "1":
+                        Console.WriteLine("Car management feature coming soon");
+                        break;
+                    case "2":
+                        Console.WriteLine("Rental management feature coming soon");
+                        break;
+                    case "3":
+                        Console.WriteLine("Logging out...");
+                        return;
+                    default:
+                        Console.WriteLine("Invalid option. Try again.");
+                        break;
+                }
+            }
+        }
+
+        static void CustomerMenu()
+        {
+            while (true)
+            {
+                Console.WriteLine("\n--- Customer Menu ---");
+                Console.WriteLine("1. View Available Cars");
+                Console.WriteLine("2. Rent a Car");
+                Console.WriteLine("3. View my Rentals");
+                Console.WriteLine("4. Logout");
+                Console.Write("Choose an option: ");
+
+                string choice = Console.ReadLine();
+
+                switch (choice)
+                {
+                    case "1":
+                        Console.WriteLine("Car viewing feature coming soon...");
+                        break;
+                    case "2":
+                        Console.WriteLine("Car rental feature coming soon...");
+                        break;
+                    case "3":
+                        Console.WriteLine("Rental history feature coming soon...");
+                        break;
+                    case "4":
+                        Console.WriteLine("Logging out...");
+                        return;
+                    default:
+                        Console.WriteLine("Invalid option. Try again.");
+                        break;
+                }
+            }
+
         }
     }
 }
