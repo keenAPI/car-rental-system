@@ -57,5 +57,25 @@ namespace Car_Rental_System
             }
             return null; // Return null if no user found
         }
+
+        public void AddCar(string brand, string model, int year, decimal pricePerDay)
+        {
+            using (SqlConnection conn = new SqlConnection(connectionString))
+            {
+                conn.Open();
+                string query = "INSERT INTO Cars (Brand, Model, Year, PricePerDay, IsAvailable) VALUES (@Brand, @Model, @Year, @PricePerDay, 1)";
+                using (SqlCommand cmd = new SqlCommand(query, conn))
+                {
+                    cmd.Parameters.AddWithValue("@Brand", brand);
+                    cmd.Parameters.AddWithValue("@Model", model);
+                    cmd.Parameters.AddWithValue("@Year", year);
+                    cmd.Parameters.AddWithValue("@PricePerDay", pricePerDay);
+                    cmd.ExecuteNonQuery();
+                }
+            }
+            Console.WriteLine("Car added successfully!");
+        }
+
+        //Add View All Cars to the DatabaseHelper
     }
 }
