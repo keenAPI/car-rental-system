@@ -1,6 +1,7 @@
 ﻿using System.Threading.Channels;
 using Car_Rental_System.Models;
 
+
 namespace Car_Rental_System
 {
     internal class Program
@@ -51,49 +52,67 @@ namespace Car_Rental_System
 
         static void Login()
         {
-            Console.Write("Enter Email: ");
+            Console.Write("Enter email: ");
             string email = Console.ReadLine();
-            Console.Write("Enter Password: ");
+
+            Console.Write("Enter password: ");
             string password = Console.ReadLine();
 
-            User user = dbHelper.LoginUser(email, password);
+            User loggedInUser = dbHelper.LoginUser(email, password);
 
-            if (user != null)
+            if (loggedInUser != null)
             {
-                Console.WriteLine($"\nWelcome, {user.Name}! You are logged in as {user.Role}.");
+                Console.WriteLine($"\nLogin successful! Welcome, {loggedInUser.Email} ({loggedInUser.Role}).");
 
-                if (user.Role == "Admin")
-                    AdminMenu();
+                if (loggedInUser.Role == "Admin")
+                {
+                    AdminMenu(loggedInUser);
+                }
+                else if (loggedInUser.Role == "Customer")
+                {
+                    CustomerMenu(loggedInUser);
+                }
                 else
-                    CustomerMenu();
+                {
+                    Console.WriteLine("Unknown role. Cannot proceed.");
+                }
             }
             else
             {
-                Console.WriteLine("Invalid email or password. Please try again.");
+                Console.WriteLine("\nInvalid email or password.");
             }
         }
 
-        static void AdminMenu()
+
+        static void AdminMenu(User loggedInUser)
         {
             while (true)
             {
                 Console.WriteLine("\n--- Admin Menu ---");
-                Console.WriteLine("1. Manage Cars");
-                Console.WriteLine("2. View Rentals");
-                Console.WriteLine("3. Logout");
-                Console.WriteLine("Choose an option: ");
+                Console.WriteLine("1. Add Car");
+                Console.WriteLine("2. View Cars");
+                Console.WriteLine("3. Edit Car");
+                Console.WriteLine("4. Delete Car");
+                Console.WriteLine("5. Logout");
+                Console.Write("Choose an option: ");
 
                 string choice = Console.ReadLine();
 
                 switch (choice)
                 {
                     case "1":
-                        Console.WriteLine("Car management feature coming soon");
+                        AddCar();
                         break;
                     case "2":
-                        Console.WriteLine("Rental management feature coming soon");
+                        ViewCars();
                         break;
                     case "3":
+                        EditCar();
+                        break;
+                    case "4":
+                        DeleteCar();
+                        break;
+                    case "5":
                         Console.WriteLine("Logging out...");
                         return;
                     default:
@@ -103,7 +122,7 @@ namespace Car_Rental_System
             }
         }
 
-        static void CustomerMenu()
+        static void CustomerMenu(User loggedInUser)
         {
             while (true)
             {
@@ -119,13 +138,13 @@ namespace Car_Rental_System
                 switch (choice)
                 {
                     case "1":
-                        Console.WriteLine("Car viewing feature coming soon...");
+                        ViewAvailableCars();
                         break;
                     case "2":
-                        Console.WriteLine("Car rental feature coming soon...");
+                        RentCar(loggedInUser.UserID);
                         break;
                     case "3":
-                        Console.WriteLine("Rental history feature coming soon...");
+                        ViewMyRentals(loggedInUser.UserID);
                         break;
                     case "4":
                         Console.WriteLine("Logging out...");
@@ -135,7 +154,86 @@ namespace Car_Rental_System
                         break;
                 }
             }
+        }
 
+
+
+        static void AddCar()
+        {
+            Console.Write("Enter Brand: ");
+            string brand = Console.ReadLine();
+            Console.Write("Enter Model: ");
+            string model = Console.ReadLine();
+            Console.Write("Enter Year: ");
+            int year = int.Parse(Console.ReadLine());
+            Console.Write("Enter Price Per Day: ");
+            decimal pricePerDay = decimal.Parse(Console.ReadLine());
+
+            dbHelper.AddCar(brand, model, year, pricePerDay);
+        }
+
+        static void ViewCars()
+        {
+            List<Car> cars = dbHelper.GetAllCars();
+            Console.WriteLine("\n--- Available Cars ---");
+            foreach (var car in cars)
+            {
+                Console.WriteLine($"ID: {car.CarID} | {car.Brand} {car.Model} ({car.Year}) - ${car.PricePerDay}/day | Available: {(car.IsAvailable ? "Yes" : "No")}");
+            }
+        }
+
+        static void EditCar()
+        {
+            Console.Write("Enter Car ID to edit: ");
+            int carID = int.Parse(Console.ReadLine());
+
+            Console.Write("Enter New Brand: ");
+            string brand = Console.ReadLine();
+            Console.Write("Enter New Model: ");
+            string model = Console.ReadLine();
+            Console.Write("Enter New Year: ");
+            int year = int.Parse(Console.ReadLine());
+            Console.Write("Enter New Price Per Day: ");
+            decimal pricePerDay = decimal.Parse(Console.ReadLine());
+
+            dbHelper.UpdateCar(carID, brand, model, year, pricePerDay);
+        }
+
+        static void DeleteCar()
+        {
+            Console.Write("Enter Car ID to delete: ");
+            int carID = int.Parse(Console.ReadLine());
+            dbHelper.DeleteCar(carID);
+        }
+
+        static void ViewAvailableCars()
+        {
+            List<Car> cars = dbHelper.GetAllCars();
+            Console.WriteLine("\n--- Available Cars ---");
+            foreach (var car in cars.Where(c => c.IsAvailable))
+            {
+                Console.WriteLine($"ID: {car.CarID} | {car.Brand} {car.Model} ({car.Year}) - ${car.PricePerDay}/day");
+            }
+        }
+
+        static void RentCar(int userId)
+        {
+            ViewAvailableCars();
+
+            Console.Write("Enter the Car ID to rent: ");
+            int carId = int.Parse(Console.ReadLine());
+
+            dbHelper.RentCar(userId, carId);
+        }
+
+        static void ViewMyRentals(int userId)
+        {
+            List<Rental> rentals = dbHelper.GetMyRentals(userId);
+            Console.WriteLine("\n--- My Rentals ---");
+            foreach (var rental in rentals)
+            {
+                Console.WriteLine($"Rental ID: {rental.RentalID} | Car ID: {rental.CarID} | Rented On: {rental.RentalDate.ToShortDateString()} | Returned: {(rental.ReturnDate.HasValue ? rental.ReturnDate.Value.ToShortDateString() : "Not yet")}");
+            }
         }
     }
 }
