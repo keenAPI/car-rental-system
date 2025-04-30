@@ -10,7 +10,8 @@ namespace Car_Rental_System
 {
     class DatabaseHelper
     {
-        private string connectionString = "Server=DESKTOP-46VMP4S;Database=CarRentalDB;Trusted_Connection=True;";
+        private string connectionString = "Server=DESKTOP-46VMP4S;Database=CarRentalDB;Trusted_Connection=True;TrustServerCertificate=True;";
+
         public void RegisterUser(string name, string email, string password, string role)
         {
             using (SqlConnection conn = new SqlConnection(connectionString))
@@ -35,6 +36,7 @@ namespace Car_Rental_System
             {
                 conn.Open();
                 string query = "SELECT * FROM Users WHERE Email = @Email AND Password = @Password";
+
                 using (SqlCommand cmd = new SqlCommand(query, conn))
                 {
                     cmd.Parameters.AddWithValue("@Email", email);
@@ -49,6 +51,7 @@ namespace Car_Rental_System
                                 UserID = (int)reader["UserID"],
                                 Name = reader["Name"].ToString(),
                                 Email = reader["Email"].ToString(),
+                                Password = reader["Password"].ToString(),
                                 Role = reader["Role"].ToString()
                             };
                         }
@@ -76,6 +79,139 @@ namespace Car_Rental_System
             Console.WriteLine("Car added successfully!");
         }
 
-        //Add View All Cars to the DatabaseHelper
+        public List<Car> GetAllCars()
+        {
+            List<Car> cars = new List<Car>();
+            using (SqlConnection conn = new SqlConnection(connectionString))
+            {
+                conn.Open();
+                string query = "SELECT * FROM Cars";
+                using (SqlCommand cmd = new SqlCommand(query, conn))
+                {
+                    using (SqlDataReader reader = cmd.ExecuteReader())
+                    {
+                        while (reader.Read())
+                        {
+                            cars.Add(new Car
+                            {
+                                CarID = (int)reader["CarID"],
+                                Brand = reader["Brand"].ToString(),
+                                Model = reader["Model"].ToString(),
+                                Year = (int)reader["Year"],
+                                PricePerDay = (decimal)reader["PricePerDay"],
+                                IsAvailable = (bool)reader["IsAvailable"]
+                            });
+                        }
+                    }
+                }
+            }
+            return cars;
+        }
+
+        public void UpdateCar(int carID, string brand, string model, int year, decimal pricePerDay)
+        {
+            using (SqlConnection conn = new SqlConnection(connectionString))
+            {
+                conn.Open();
+                string query = "UPDATE Cars SET Brand = @Brand, Model = @Model, Year = @Year, PricePerDay = @PricePerDay WHERE CarID = @CarID";
+                using (SqlCommand cmd = new SqlCommand(query, conn))
+                {
+                    cmd.Parameters.AddWithValue("@Brand", brand);
+                    cmd.Parameters.AddWithValue("@Model", model);
+                    cmd.Parameters.AddWithValue("@Year", year);
+                    cmd.Parameters.AddWithValue("@PricePerDay", pricePerDay);
+                    cmd.Parameters.AddWithValue("@CarID", carID);
+                    cmd.ExecuteNonQuery();
+                }
+
+            }
+            Console.WriteLine("Car updated successfully!");
+        }
+
+        public void DeleteCar(int carID)
+        {
+            using (SqlConnection conn = new SqlConnection(connectionString))
+            {
+                conn.Open();
+                string query = "DELETE FROM Cars WHERE CarID = @CarID";
+                using (SqlCommand cmd = new SqlCommand(query, conn))
+                {
+                    cmd.Parameters.AddWithValue("@CarID", carID);
+                    cmd.ExecuteNonQuery();
+                }
+            }
+            Console.WriteLine("Car deleted successfully!");
+        }
+
+        public void RentCar(int userId, int carId)
+        {
+            using (SqlConnection conn = new SqlConnection(connectionString))
+            {
+                conn.Open();
+
+                //First check if car is available
+                string checkQuery = "SELECT IsAvailable FROM Cars WHERE CarID = @CarID";
+                using (SqlCommand checkCmd = new SqlCommand(checkQuery, conn))
+                {
+                    checkCmd.Parameters.AddWithValue("@CarID", carId);
+                    var isAvailable = (bool)checkCmd.ExecuteScalar();
+                    if (!isAvailable)
+                    {
+                        Console.WriteLine("Car is not available.");
+                        return;
+                    }
+                }
+
+                //Rent the car
+                string insertQuery = "INSERT INTO Rentals (UserID, CarID, RentalDate) VALUES (@UserID, @CarID, @RentalDate)";
+                using (SqlCommand cmd = new SqlCommand(insertQuery, conn))
+                {
+                    cmd.Parameters.AddWithValue("@UserID", userId);
+                    cmd.Parameters.AddWithValue("@CarID", carId);
+                    cmd.Parameters.AddWithValue("@RentalDate", DateTime.Now);
+                    cmd.ExecuteNonQuery();
+                }
+
+                //Update car availability
+                string updateCarQuery = "UPDATE Cars SET IsAvailable = 0 WHERE CarID = @CarID";
+                using (SqlCommand updateCmd = new SqlCommand(updateCarQuery, conn))
+                {
+                    updateCmd.Parameters.AddWithValue("@CarID", carId);
+                    updateCmd.ExecuteNonQuery();
+                }
+            }
+
+            Console.WriteLine("Car rented successfully!");
+        }
+
+        public List<Rental> GetMyRentals(int userId)
+        {
+            List<Rental> rentals = new List<Rental>();
+
+            using (SqlConnection conn = new SqlConnection(connectionString))
+            {
+                conn.Open();
+                string query = "SELECT * FROM Rentals WHERE UserID = @UserID";
+                using (SqlCommand cmd = new SqlCommand(query, conn))
+                {
+                    cmd.Parameters.AddWithValue("@UserID", userId);
+                    using (SqlDataReader reader = cmd.ExecuteReader())
+                    {
+                        while(reader.Read())
+                        {
+                            rentals.Add(new Rental
+                            {
+                                RentalID = (int)reader["RentalID"],
+                                UserID = (int)reader["UserID"],
+                                CarID = (int)reader["CarID"],
+                                RentalDate = (DateTime)reader["RentalDate"],
+                                ReturnDate = reader["ReturnDate"] == DBNull.Value ? null : (DateTime?)reader["ReturnDate"]
+                            });
+                        }
+                    }
+                }
+            }
+            return rentals;
+        }
     }
 }
