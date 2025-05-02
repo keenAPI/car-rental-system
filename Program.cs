@@ -129,8 +129,10 @@ namespace Car_Rental_System
                 Console.WriteLine("\n--- Customer Menu ---");
                 Console.WriteLine("1. View Available Cars");
                 Console.WriteLine("2. Rent a Car");
-                Console.WriteLine("3. View my Rentals");
-                Console.WriteLine("4. Logout");
+                Console.WriteLine("3. Make Payment");
+                Console.WriteLine("4. Return a Car");
+                Console.WriteLine("5. View my Rentals");
+                Console.WriteLine("6. Logout");
                 Console.Write("Choose an option: ");
 
                 string choice = Console.ReadLine();
@@ -144,9 +146,15 @@ namespace Car_Rental_System
                         RentCar(loggedInUser.UserID);
                         break;
                     case "3":
-                        ViewMyRentals(loggedInUser.UserID);
+                        MakePayment(loggedInUser.UserID);
                         break;
                     case "4":
+                        ReturnCar(loggedInUser.UserID);
+                        break;
+                    case "5":
+                        ViewMyRentals(loggedInUser.UserID);
+                        break;
+                    case "6":
                         Console.WriteLine("Logging out...");
                         return;
                     default:
@@ -224,6 +232,34 @@ namespace Car_Rental_System
             int carId = int.Parse(Console.ReadLine());
 
             dbHelper.RentCar(userId, carId);
+        }
+
+        static void MakePayment(int userId)
+        {
+            // Show rentals with no payments
+            List<Rental> rentals = dbHelper.GetMyRentals(userId);
+            Console.WriteLine("\n--- Unpaid Rentals ---");
+
+            foreach (var rental in rentals.Where(r => r.ReturnDate != null)) // only returned
+            {
+                Console.WriteLine($"Rental ID: {rental.RentalID} | Car ID: {rental.CarID} | Returned On: {rental.ReturnDate.Value.ToShortDateString()}");
+            }
+
+            Console.Write("Enter Rental ID to pay for: ");
+            int rentalId = int.Parse(Console.ReadLine());
+
+            Console.Write("Enter amount to pay: ");
+            decimal amount = decimal.Parse(Console.ReadLine());
+
+            dbHelper.MakePayment(rentalId, amount);
+        }
+
+        static void ReturnCar(int userId)
+        {
+            Console.Write("Enter the Car ID to return: ");
+            int carId = int.Parse(Console.ReadLine());
+
+            dbHelper.ReturnCar(userId, carId);
         }
 
         static void ViewMyRentals(int userId)
