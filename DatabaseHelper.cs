@@ -213,5 +213,60 @@ namespace Car_Rental_System
             }
             return rentals;
         }
+
+        public void ReturnCar(int userId, int carId)
+        {
+            using (SqlConnection conn = new SqlConnection(connectionString))
+            {
+                conn.Open();
+
+                // Step 1: Update rental record with return date
+                string updateRental = @" UPDATE Rentals SET ReturnDate = @ReturnDate WHERE UserID = @UserID AND CarID = @CarID AND ReturnDate IS NULL";
+
+                using (SqlCommand cmd = new SqlCommand(updateRental, conn))
+                {
+                    cmd.Parameters.AddWithValue("@ReturnDate", DateTime.Now);
+                    cmd.Parameters.AddWithValue("@UserID", userId);
+                    cmd.Parameters.AddWithValue("@CarID", carId);
+                    int rows = cmd.ExecuteNonQuery();
+
+                    if (rows == 0)
+                    {
+                        Console.WriteLine("No active rental found for that car.");
+                        return;
+                    }
+                }
+
+                // Step 2: Set the car as available again
+                string updateCar = "UPDATE Cars SET IsAvailable = 1 WHERE CarID = @CarID";
+                using (SqlCommand cmd = new SqlCommand(updateCar, conn))
+                {
+                    cmd.Parameters.AddWithValue("@CarID", carId);
+                    cmd.ExecuteNonQuery();
+                }
+
+                Console.WriteLine("Car returned successfully!");
+            }
+        }
+
+        public void MakePayment(int rentalId, decimal amount)
+        {
+            using (SqlConnection conn = new SqlConnection(connectionString))
+            {
+                conn.Open();
+
+                string query = "INSERT INTO Payments (RentalID, Amount, DatePaid) VALUES (@RentalID, @Amount, @DatePaid)";
+                using (SqlCommand cmd = new SqlCommand(query, conn))
+                {
+                    cmd.Parameters.AddWithValue("@RentalID", rentalId);
+                    cmd.Parameters.AddWithValue("@Amount", amount);
+                    cmd.Parameters.AddWithValue("@DatePaid", DateTime.Now);
+                    cmd.ExecuteNonQuery();
+
+                }
+            }
+
+            Console.WriteLine("Payment successful!");
+        }
     }
 }
